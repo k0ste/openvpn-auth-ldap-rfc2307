@@ -1,0 +1,12 @@
+diff -Naupr auth-ldap-2.0.3.orig/tests/Makefile.in auth-ldap-2.0.3/tests/Makefile.in
+--- auth-ldap-2.0.3.orig/tests/Makefile.in	2006-08-01 05:51:52.000000000 +0200
++++ auth-ldap-2.0.3/tests/Makefile.in	2007-06-20 20:14:53.000000000 +0200
+@@ -26,7 +26,7 @@ TEST_OBJS=	tests.o \
+ CFLAGS+=	@CHECK_CFLAGS@ -DTEST_DATA=\"${srcdir}/data\"
+ OBJCFLAGS+=	@CHECK_CFLAGS@ -DTEST_DATA=\"${srcdir}/data\"
+ LIBS+=		-lauth-ldap-testing $(OBJC_LIBS) $(LDAP_LIBS) @CHECK_LIBS@
+-LDFLAGS+=	-L${top_builddir}src $(LIBS)
++LDFLAGS+=	-L${top_builddir}/src $(LIBS)
+ 
+ # Recompile the tests every time
+ all: tests
