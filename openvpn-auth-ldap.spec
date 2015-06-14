@@ -6,12 +6,12 @@ License: BSD
 Group: Applications/Internet
 URL: http://code.google.com/p/openvpn-auth-ldap/
 Source0: http://openvpn-auth-ldap.googlecode.com/files/auth-ldap-%{version}.tar.gz
-Source1: openvpn-plugin.h
 Patch0: auth-ldap-2.0.3-top_builddir.patch
 Patch1: auth-ldap-2.0.3-README.patch
 Patch2: auth-ldap-2.0.3-tools-CFLAGS.patch
 Patch3: auth-ldap-gnustep.patch
 Patch4: auth-ldap-2.0.3-remoteAddress.patch
+Patch5: auth-ldap-2.0.3-rfc2307.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 # This is a plugin not linked against a lib, so hardcode the requirement
 # since we require the parent configuration and plugin directories
@@ -31,14 +31,15 @@ LDAP for OpenVPN 2.x.
 
 %prep
 %setup -q -n auth-ldap-%{version}
-%patch1 -p1 -b .README
-%patch2 -p1 -b .tools-CFLAGS
-%patch3 -p0 -b .gnustep
-%patch4 -p1 -b .remoteAddress
+%patch1 -p1
+%patch2 -p1
+%patch3 -p0
+%patch4 -p1
+%patch5 -p1
 # Fix plugin from the instructions in the included README
-sed -i 's|^plugin .*| plugin %{_libdir}/openvpn/plugin/lib/openvpn-auth-ldap.so "/etc/openvpn/auth/ldap.conf"|g' README
+sed -i 's|^plugin .*| plugin %{_libdir}/openvpn/plugins/openvpn-auth-ldap.so "/etc/openvpn/auth/ldap.conf"|g' README
 # Install the one required OpenVPN plugin header
-install -p -m 0644 %{SOURCE1} .
+install -p -m 0644 /usr/include/openvpn-plugin.h .
 autoconf
 autoheader
 
@@ -50,15 +51,15 @@ autoheader
 %if 0%{?fedora} || 0%{?rhel} >= 7
     --with-objc-runtime=modern \
 %endif
-    --libdir=%{_libdir}/openvpn/plugin/lib \
-    --with-openvpn="`pwd`"
+    --libdir=%{_libdir}/openvpn/plugins \
+    --with-openvpn="/usr/include"
 make %{?_smp_mflags}
 
 
 %install
 rm -rf %{buildroot}
 # Main plugin
-mkdir -p %{buildroot}%{_libdir}/openvpn/plugin/lib
+mkdir -p %{buildroot}%{_libdir}/openvpn/plugins
 make install DESTDIR=%{buildroot}
 # Example config file
 install -D -p -m 0600 auth-ldap.conf \
@@ -74,7 +75,7 @@ rm -rf %{buildroot}
 %doc LICENSE README auth-ldap.conf
 %dir %{_sysconfdir}/openvpn/auth/
 %config(noreplace) %{_sysconfdir}/openvpn/auth/ldap.conf
-%{_libdir}/openvpn/plugin/lib/openvpn-auth-ldap.so
+%{_libdir}/openvpn/plugins/openvpn-auth-ldap.so
 
 
 %changelog
