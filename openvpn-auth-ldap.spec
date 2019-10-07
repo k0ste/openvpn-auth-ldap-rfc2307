@@ -1,24 +1,18 @@
 Summary: OpenVPN plugin for LDAP authentication
 Name: openvpn-auth-ldap
-Version: 2.0.3
-Release: 16%{?dist}
+Version: 2.0.4
+Release: 1%{?dist}
 License: BSD
 Group: Applications/Internet
-URL: http://code.google.com/p/openvpn-auth-ldap/
-Source0: http://openvpn-auth-ldap.googlecode.com/files/auth-ldap-%{version}.tar.gz
-Patch0: auth-ldap-2.0.3-top_builddir.patch
-Patch1: auth-ldap-2.0.3-README.patch
-Patch2: auth-ldap-2.0.3-tools-CFLAGS.patch
-Patch3: auth-ldap-gnustep.patch
-Patch4: auth-ldap-2.0.3-remoteAddress.patch
-Patch5: auth-ldap-2.0.3-rfc2307.patch
+URL: https://github.com/threerings/openvpn-auth-ldap 
+Source0: https://github.com/threerings/openvpn-auth-ldap/archive/auth-ldap-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 # This is a plugin not linked against a lib, so hardcode the requirement
 # since we require the parent configuration and plugin directories
 Requires: openvpn >= 2.0
 BuildRequires: re2c
-Buildrequires: doxygen
-Buildrequires: openldap-devel
+BuildRequires: doxygen
+BuildRequires: openldap-devel
 BuildRequires: check-devel
 BuildRequires: gcc-objc
 BuildRequires: gnustep-base-devel
@@ -28,33 +22,17 @@ BuildRequires: autoconf
 The OpenVPN Auth-LDAP Plugin implements username/password authentication via
 LDAP for OpenVPN 2.x.
 
-
 %prep
-%setup -q -n auth-ldap-%{version}
-%patch1 -p1
-%patch2 -p1
-%patch3 -p0
-%patch4 -p1
-%patch5 -p1
-# Fix plugin from the instructions in the included README
-sed -i 's|^plugin .*| plugin %{_libdir}/openvpn/plugins/openvpn-auth-ldap.so "/etc/openvpn/auth/ldap.conf"|g' README
-# Install the one required OpenVPN plugin header
-install -p -m 0644 /usr/include/openvpn-plugin.h .
-autoconf
+%setup -q -n openvpn-auth-ldap-auth-ldap-%{version}
+autoreconf -fvi
 autoheader
 
-
 %build
-# Fix undefined objc_msgSend reference (nope, the with-objc-runtime is enough)
-#export OBJCFLAGS=-fobjc-abi-version=2
+CFLAGS="-fPIC" OBJCFLAGS="-std=gnu11"
 %configure \
-%if 0%{?fedora} || 0%{?rhel} >= 7
-    --with-objc-runtime=modern \
-%endif
     --libdir=%{_libdir}/openvpn/plugins \
-    --with-openvpn="/usr/include"
+    --with-openvpn="/usr/include/openvpn"
 make %{?_smp_mflags}
-
 
 %install
 rm -rf %{buildroot}
@@ -63,27 +41,40 @@ mkdir -p %{buildroot}%{_libdir}/openvpn/plugins
 make install DESTDIR=%{buildroot}
 # Example config file
 install -D -p -m 0600 auth-ldap.conf \
-    %{buildroot}%{_sysconfdir}/openvpn/auth/ldap.conf
-
+    %{buildroot}%{_sysconfdir}/openvpn/server/auth/ldap.conf
 
 %clean
 rm -rf %{buildroot}
 
-
 %files
 %defattr(-,root,root,-)
-%doc LICENSE README auth-ldap.conf
-%dir %{_sysconfdir}/openvpn/auth/
-%config(noreplace) %{_sysconfdir}/openvpn/auth/ldap.conf
+%doc LICENSE auth-ldap.conf
+%dir %{_sysconfdir}/openvpn/server/auth/
+%config(noreplace) %{_sysconfdir}/openvpn/server/auth/ldap.conf
 %{_libdir}/openvpn/plugins/openvpn-auth-ldap.so
 
 
 %changelog
-* Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.0.3-16
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+* Mon Oct 7 2019 Konstantin Shalygin <k0ste@k0ste.ru> 2.0.4-1
+- Fixed plugin path's.
+- Use openvpn-devel headers.
+- Bump version to 2.0.4.
 
-* Sat Jun 07 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.0.3-15
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+* Thu Sep 05 2019 Sean Callaway <seancallaway@gmail.com> 2.0.3-17
+- Applied patch to prevent crash when LDAP server unavailable.
+
+* Wed Jan 23 2019 Sean Callaway <seancallaway@gmail.com> 2.0.3-16
+- Added unapplied patch.
+
+* Wed Sep 13 2017 Sean Callaway <seancallaway@gmail.com> 2.0.3-15
+- Include patch to fix binding before STARTTLS has completed.
+- Updated URLs.
+
+* Mon Apr 11 2016 Sean Callaway <seancallaway@gmail.com> 2.0.3-14.1
+- Rebuilt for OpenVPN 2.3.10 headers.
+
+* Fri Jun 12 2015 Konstantin Shalygin <k0ste@k0ste.ru> 2.0.3-14
+- Added RFC2307 patch.
 
 * Tue Mar 11 2014 Matthias Saou <matthias@saou.eu> 2.0.3-13
 - Include remoteAddress patch from upstream issue n°4, to fix tap bridging.
