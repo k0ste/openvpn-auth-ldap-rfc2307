@@ -1,11 +1,12 @@
 Summary: OpenVPN plugin for LDAP authentication
 Name: openvpn-auth-ldap
 Version: 2.0.4
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: BSD
 Group: Applications/Internet
 URL: https://github.com/threerings/openvpn-auth-ldap 
 Source0: https://github.com/threerings/openvpn-auth-ldap/archive/auth-ldap-%{version}.tar.gz
+Patch0: 77.patch
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 # This is a plugin not linked against a lib, so hardcode the requirement
 # since we require the parent configuration and plugin directories
@@ -13,9 +14,10 @@ Requires: openvpn >= 2.0
 BuildRequires: re2c
 BuildRequires: doxygen
 BuildRequires: openldap-devel
+BuildRequires: openssl-devel
+BuildRequires: openvpn-devel
 BuildRequires: check-devel
 BuildRequires: gcc-objc
-BuildRequires: gnustep-base-devel
 BuildRequires: autoconf
 
 %description
@@ -24,6 +26,7 @@ LDAP for OpenVPN 2.x.
 
 %prep
 %setup -q -n openvpn-auth-ldap-auth-ldap-%{version}
+%patch0 -p1
 autoreconf -fvi
 autoheader
 
@@ -55,6 +58,10 @@ rm -rf %{buildroot}
 
 
 %changelog
+* Tue Oct 8 2019 Konstantin Shalygin <k0ste@k0ste.ru> 2.0.4-2
+- Update dependencies list.
+- Add TLSRequireCert option patch.
+
 * Mon Oct 7 2019 Konstantin Shalygin <k0ste@k0ste.ru> 2.0.4-1
 - Fixed plugin path's.
 - Use openvpn-devel headers.
